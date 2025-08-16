@@ -1,0 +1,11 @@
+recipient_name,street,city,state,zip_code,amount,date_of_last_contact
+"John Smith","123 Main Street","New York","NY","10001",1500.00,"2023-01-15"
+"Jane Doe","456 Oak Avenue","Los Angeles","CA","90210",750.00,"2023-02-20"
+"Bob Johnson","789 Pine Road","Chicago","IL","60601",2500.00,"2023-03-10"
+"Alice Brown","321 Elm Street","Houston","TX","77001",500.00,"2023-04-05"
+"Charlie Wilson","654 Maple Drive","Phoenix","AZ","85001",1200.00,"2023-05-12"
+"Sarah Davis","987 Cedar Lane","Philadelphia","PA","19101",800.00,"2023-06-18"
+"Michael Lee","147 Birch Court","San Antonio","TX","78201",300.00,"2023-07-22"
+"Emily Garcia","258 Spruce Way","San Diego","CA","92101",1800.00,"2023-08-30"
+"David Martinez","369 Willow Place","Dallas","TX","75201",950.00,"2023-09-14"
+"Lisa Rodriguez","741 Aspen Circle","San Jose","CA","95101",2200.00,"2023-10-08"
