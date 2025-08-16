@@ -1,64 +1,94 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CKEditor, useCKEditorCloud } from '@ckeditor/ckeditor5-react';
-import PlaceholderToolbar from './PlaceholderToolbar';
+import PlaceholderSidebar from './PlaceholderSidebar';
 import { supabase } from '../lib/supabase';
-import { Eye, X, Download } from 'lucide-react';
+import { Eye, X, Download, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface TemplateEditorProps {
   initialContent?: string;
   onContentChange?: (content: string) => void;
+  onSave?: (content: string) => void;
+  onCancel?: () => void;
   placeholder?: string;
 }
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
   initialContent = '',
   onContentChange,
+  onSave,
+  onCancel,
   placeholder = 'Write your escheatment letter template here...'
 }) => {
   const [content, setContent] = useState(initialContent || getDefaultTemplate());
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  // const [isPreviewMode, setIsPreviewMode] = useState(false); // Preview mode commented out
   const editorRef = useRef<any>(null);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl+Shift+S: Toggle sidebar
+      if (event.ctrlKey && event.shiftKey && event.key === 'S') {
+        event.preventDefault();
+        setShowSidebar(!showSidebar);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showSidebar]);
 
   // Default professional letter template with placeholders
   // eslint-disable-next-line no-template-curly-in-string
   function getDefaultTemplate() {
-    return '<div style="font-family: \'Times New Roman\', serif; font-size: 12pt; line-height: 1.1;">' +
-      '<div style="margin-bottom: 1em;">' +
-        '<div style="font-weight: bold; font-size: 14pt; margin-bottom: 0.1em;">{{company_name}}</div>' +
-        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.05em;">123 Business Street</div>' +
-        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.05em;">New York, NY 10001</div>' +
-        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.05em;">Phone: (555) 123-4567</div>' +
+    return '<div style="font-family: \'Times New Roman\', serif; font-size: 12pt; line-height: 1.5;">' +
+      '<div style="margin-bottom: 0.8em;">' +
+        '<div style="font-weight: bold; font-size: 14pt; margin-bottom: 0.15em;">{{company_name}}</div>' +
+        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.08em;">123 Business Street</div>' +
+        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.08em;">New York, NY 10001</div>' +
+        '<div style="color: #666; font-size: 10pt; margin-bottom: 0.08em;">Phone: (555) 123-4567</div>' +
       '</div>' +
-      '<div style="margin-bottom: 1em;">' +
-        '<div style="margin-bottom: 0.1em;">{{date}}</div>' +
-        '<div style="margin-bottom: 0.1em;">{{recipient_name}}</div>' +
-        '<div style="margin-bottom: 0.1em;">{{address}}</div>' +
+      '<div style="margin-bottom: 0.8em;">' +
+        '<div style="margin-bottom: 0.15em;">{{todays_date}}</div>' +
+        '<div style="margin-bottom: 0.15em;">{{recipient_name}}</div>' +
+        '<div style="margin-bottom: 0.15em;">{{address}}</div>' +
       '</div>' +
-      '<div style="margin-bottom: 0.5em;">Dear {{recipient_name}},</div>' +
-      '<div style="text-align: justify; margin-bottom: 0.5em;">' +
+      '<div style="margin-bottom: 0.6em;">Dear {{recipient_name}},</div>' +
+      '<div style="text-align: justify; margin-bottom: 0.6em;">' +
         'We are writing to inform you that we have identified unclaimed property in your name. According to our records, you have an outstanding amount of <strong>${{amount}}</strong> that has been held by our company.' +
       '</div>' +
-      '<div style="text-align: justify; margin-bottom: 0.5em;">' +
-        'This property is currently being held in accordance with the escheatment laws of {{state}}. To claim your property, please complete the enclosed claim form and return it to our office within 30 days of the date of this letter.' +
+      '<div style="text-align: justify; margin-bottom: 0.6em;">' +
+        'This property is currently being held in accordance with the escheatment laws of {{state}}. To claim your property, please complete the enclosed claim form and return it to our office by {{response_by_date}}.' +
       '</div>' +
-      '<div style="text-align: justify; margin-bottom: 0.5em;">' +
+      '<div style="text-align: justify; margin-bottom: 0.6em;">' +
         'If you have any questions regarding this matter, please do not hesitate to contact our office. We are committed to helping you recover your unclaimed property.' +
       '</div>' +
-      '<div style="margin-bottom: 0.5em;">Sincerely,</div>' +
-      '<div style="margin-bottom: 0.1em;">{{company_name}}</div>' +
+      '<div style="margin-bottom: 0.6em;">Sincerely,</div>' +
+      '<div style="margin-bottom: 0.15em;">{{company_name}}</div>' +
       '<div style="color: #666; font-size: 10pt;">Unclaimed Property Department</div>' +
     '</div>';
   }
 
   // Function to replace placeholders with sample data
   function getPreviewContent() {
+    const today = new Date();
+    const responseByDate = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from today
+    const transactionDate = new Date(today.getTime() - (90 * 24 * 60 * 60 * 1000)); // 90 days ago
+    
     return content
       .replace(/\{\{company_name\}\}/g, 'ABC Corporation')
-      .replace(/\{\{date\}\}/g, 'January 15, 2024')
+      .replace(/\{\{todays_date\}\}/g, today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+      .replace(/\{\{response_by_date\}\}/g, responseByDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+      .replace(/\{\{transaction_date\}\}/g, transactionDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
+      .replace(/\{\{date\}\}/g, today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))
       .replace(/\{\{recipient_name\}\}/g, 'John Smith')
       .replace(/\{\{address\}\}/g, '456 Main Street, Apt 2B<br>Los Angeles, CA 90210')
       .replace(/\{\{amount\}\}/g, '1,250.00')
-      .replace(/\{\{state\}\}/g, 'California');
+      .replace(/\{\{state\}\}/g, 'California')
+      .replace(/\{\{phone\}\}/g, '(555) 123-4567')
+      .replace(/\{\{email\}\}/g, 'contact@company.com');
   }
 
   // Function to print/save as PDF
@@ -76,7 +106,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         @media print {
           @page {
             size: A4;
-            margin: 2.54cm;
+            margin: 20mm;
           }
           body {
             font-family: 'Times New Roman', serif;
@@ -88,6 +118,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           .print-content {
             width: 100%;
             max-width: none;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            min-height: auto;
+          }
+          .a4-shell {
+            padding: 0;
           }
         }
         body {
@@ -95,13 +132,22 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           font-size: 12pt;
           line-height: 1.5;
           margin: 0;
-          padding: 2.54cm;
+          padding: 20mm;
           background: white;
         }
         .print-content {
-          width: 21cm;
-          min-height: 29.7cm;
+          width: 210mm;
+          min-height: 297mm;
           margin: 0 auto;
+          box-sizing: border-box;
+        }
+        /* Paragraph spacing for print */
+        .print-content p {
+          margin: 0 0 6pt;
+        }
+        .print-content h1, .print-content h2, .print-content h3 {
+          margin-top: 8pt;
+          margin-bottom: 6pt;
         }
       </style>
     `;
@@ -280,22 +326,59 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   return (
     <div className="template-editor">
-      {/* Placeholder Toolbar */}
-      <PlaceholderToolbar onInsertPlaceholder={handleInsertPlaceholder} />
+                        {/* Placeholder Controls */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setShowSidebar(!showSidebar)}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                          showSidebar 
+                            ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                            : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        <span>📋</span>
+                        <span>Placeholders</span>
+                      </button>
+                    </div>
+                    
+                    {/* Editor Instructions */}
+                    <div className="flex items-center space-x-4 text-xs text-gray-600">
+                      <p>💡 <strong>Tips:</strong> Ctrl+Shift+S (Toggle Placeholders)</p>
+                      {/* Preview Mode Button - Commented out
+                      <button
+                        onClick={() => setIsPreviewMode(!isPreviewMode)}
+                        className={`px-2 py-1 rounded text-xs transition-colors ${
+                          isPreviewMode 
+                            ? 'bg-green-100 text-green-700 border border-green-300' 
+                            : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        {isPreviewMode ? '📝 Edit Mode' : '👁️ Preview Mode'}
+                      </button>
+                      */}
+                    </div>
+                  </div>
       
       {/* CKEditor */}
-      <div className="border border-gray-200 rounded-lg">
+      <div 
+        className="border border-gray-200 rounded-lg transition-all duration-300"
+        title="Press Enter for new paragraph, Shift+Enter for line break"
+      >
         <style>
           {`
             .ck-editor__editable {
-              min-height: 600px !important;
-              padding: 2.54cm !important;
+              max-width: 210mm !important;
+              min-height: 297mm !important;
+              padding: 20mm !important;
+              margin: 0 auto !important;
+              box-sizing: border-box !important;
               background: white !important;
               box-shadow: 0 0 10px rgba(0,0,0,0.1) !important;
               border: 1px solid #e5e7eb !important;
               font-family: 'Times New Roman', serif !important;
               font-size: 12pt !important;
-              line-height: 1.1 !important;
+              line-height: 1.5 !important;
               color: #000 !important;
             }
             .ck-editor__editable:focus {
@@ -308,13 +391,45 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
               background-size: 20px 20px;
             }
+            /* Paragraph spacing */
+            .ck-content p {
+              margin: 0 0 6pt !important;
+            }
+            .ck-content h1, .ck-content h2, .ck-content h3 {
+              margin-top: 8pt !important;
+              margin-bottom: 6pt !important;
+            }
+            .ck-content table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+            }
+            .ck-content table td, .ck-content table th {
+              padding: 4pt !important;
+              border: 1px solid #e5e7eb !important;
+            }
+            /* Print styles for editor */
+            @media print {
+              @page {
+                size: A4;
+                margin: 20mm;
+              }
+              .ck-editor__editable {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                min-height: auto !important;
+              }
+            }
           `}
         </style>
         <CKEditor
           editor={ClassicEditor}
+          data={content}
+          onChange={handleContentChange}
+          onReady={handleEditorReady}
           config={{
             licenseKey: process.env.REACT_APP_CKEDITOR_LICENSE_KEY || '',
-            placeholder: placeholder,
+            placeholder: 'Start typing your letter template... Press Enter for new paragraph, Shift+Enter for line break',
             plugins: [
               Essentials,
               Paragraph,
@@ -442,22 +557,47 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
               ]
             }
           }}
-          data={content}
-          onChange={handleContentChange}
-          onReady={handleEditorReady}
         />
       </div>
 
-      {/* PDF Preview Button */}
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={() => setShowPdfPreview(true)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          <span>Preview PDF</span>
-        </button>
-      </div>
+                        {/* Action Buttons */}
+                  <div className="mt-4 flex items-center justify-center space-x-4">
+                    <button
+                      onClick={() => setShowPdfPreview(true)}
+                      className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                      <span>Preview PDF</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        onSave?.(content);
+                        toast.success('Template saved successfully!', {
+                          duration: 3000,
+                          position: 'top-right',
+                          icon: '💾',
+                          style: {
+                            background: '#10b981',
+                            color: '#ffffff',
+                            border: '1px solid #059669'
+                          }
+                        });
+                      }}
+                      className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <span>💾</span>
+                      <span>Save</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => onCancel?.()}
+                      className="flex items-center space-x-2 bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      <span>↺</span>
+                      <span>Cancel</span>
+                    </button>
+                  </div>
 
       {/* PDF Preview Modal */}
       {showPdfPreview && (
@@ -500,12 +640,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <div 
                 className="bg-white border border-gray-200 rounded-lg shadow-sm mx-auto"
                 style={{
-                  width: '21cm',
-                  minHeight: '29.7cm',
-                  padding: '2.54cm',
+                  width: '210mm',
+                  minHeight: '297mm',
+                  padding: '20mm',
                   fontFamily: 'Times New Roman, serif',
                   fontSize: '12pt',
-                  lineHeight: 1.1,
+                  lineHeight: 1.5,
+                  boxSizing: 'border-box',
                   backgroundImage: `
                     linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
                     linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px)
@@ -535,6 +676,13 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </div>
         </div>
       )}
+
+                        {/* Placeholder Sidebar */}
+                  <PlaceholderSidebar
+                    onInsertPlaceholder={handleInsertPlaceholder}
+                    isVisible={showSidebar}
+                    onToggle={() => setShowSidebar(!showSidebar)}
+                  />
     </div>
   );
 };

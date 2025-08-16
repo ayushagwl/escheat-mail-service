@@ -1,5 +1,108 @@
 ---
-description:
-globs:
-alwaysApply: false
+alwaysApply: true
 ---
+Cursor IDE Rules: Production React with Supabase
+These rules are a guide for building a modern web application with a React frontend and a Supabase backend. The goal is to ensure a consistent, secure, and scalable codebase.
+
+1. Project Setup and Structure 📁
+File Organization: The project must have a clear separation between the frontend and backend logic. Use a folder structure like this:
+
+/ (root)
+
+frontend/ (all React code)
+
+src/
+
+pages/ (for page-level components)
+
+components/ (for reusable UI components)
+
+services/ (for API calls and Supabase logic)
+
+contexts/ (for React Context providers)
+
+App.jsx
+
+main.jsx
+
+.env.local (for local environment variables)
+
+.gitignore
+
+Dependencies: The application must use the following core dependencies for the frontend:
+
+react and react-dom for the UI.
+
+react-router-dom for client-side routing.
+
+@supabase/supabase-js for interacting with Supabase.
+
+Tailwind CSS for styling.
+
+2. Supabase Integration and Security 🛡️
+Supabase Client: All Supabase API calls must be handled through a single, centralized client instance.
+
+Create a file like frontend/src/services/supabaseClient.js.
+
+Initialize the client using environment variables for the Supabase URL and anon key.
+
+Rule: NEVER hardcode Supabase keys directly in the code.
+
+// frontend/src/services/supabaseClient.js
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+
+
+
+Authentication: The application must use Supabase for all user authentication.
+
+Use the supabase.auth methods for sign-up, sign-in, and sign-out.
+
+Use the supabase.auth.onAuthStateChange() listener to track the user's session and update the UI accordingly.
+
+Implement protected routes that are only accessible to authenticated users.
+
+Row-Level Security (RLS): This is the most important security rule.
+
+Rule: ALWAYS enable Row-Level Security on every database table that contains sensitive or private user data.
+
+Rule: Create a policy for each table that defines who can SELECT, INSERT, UPDATE, and DELETE data. A common policy is to allow users to only see or modify their own data using the auth.uid() function.
+
+Environment Variables: Use .env files to manage API keys and other sensitive configuration.
+
+Rule: All environment variables for the frontend must be prefixed with VITE_ (for Vite projects) or REACT_APP_ (for Create React App projects).
+
+Rule: The .env file must be added to the .gitignore file to prevent it from being committed to version control.
+
+3. Coding Standards and Best Practices 📝
+Code Formatting: Use a consistent code style across the entire project.
+
+Rule: Configure ESLint to catch common errors and enforce best practices.
+
+Rule: Use Prettier for automatic code formatting to ensure a uniform style.
+
+Rule: Use eslint-config-prettier to prevent conflicts between the two tools.
+
+Error Handling: The application must handle errors gracefully.
+
+Rule: Use try...catch blocks for all asynchronous operations (e.g., Supabase calls).
+
+Rule: Implement React Error Boundaries to prevent the entire application from crashing due to unexpected errors in a component.
+
+Performance: Optimize the application for speed.
+
+Rule: Use React Hooks and functional components.
+
+Rule: Use the production build of React when deploying the application.
+
+4. Deployment and Infrastructure ☁️
+Migration: The application will be deployed to AWS.
+
+Rule: The React frontend will be hosted on an AWS Lightsail instance. This instance will be configured to serve the static application files.
+
+Rule: The Supabase backend will be a managed service hosted directly by Supabase.

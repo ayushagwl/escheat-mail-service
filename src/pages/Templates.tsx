@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, LetterTemplate } from '../lib/supabase';
 import TemplateEditor from '../components/TemplateEditor';
-import { Plus, Edit, Trash2, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, ArrowLeft } from 'lucide-react';
 
 const Templates: React.FC = () => {
   const { user } = useAuth();
@@ -132,17 +132,37 @@ const Templates: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Letter Templates</h1>
-        <button
-          onClick={handleNewTemplate}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Template</span>
-        </button>
-      </div>
+                  {/* Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                {showEditor && (
+                  <button
+                    onClick={() => {
+                      setShowEditor(false);
+                      setEditingTemplate(null);
+                      setNewTemplateName('');
+                      setEditorContent('');
+                    }}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span>Back to Templates</span>
+                  </button>
+                )}
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {editingTemplate ? `Template: ${editingTemplate.name}` : 'Letter Templates'}
+                </h1>
+              </div>
+              {!showEditor && (
+                <button
+                  onClick={handleNewTemplate}
+                  className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>New Template</span>
+                </button>
+              )}
+            </div>
 
       {/* Template Editor */}
       {showEditor && (
@@ -177,84 +197,72 @@ const Templates: React.FC = () => {
           <TemplateEditor
             initialContent={editingTemplate?.html_content || ''}
             onContentChange={(content) => setEditorContent(content)}
+            onSave={(content) => {
+              if (editingTemplate) {
+                handleUpdateTemplate(content);
+              } else {
+                handleCreateTemplate(content);
+              }
+            }}
+            onCancel={() => {
+              setShowEditor(false);
+              setEditingTemplate(null);
+              setNewTemplateName('');
+              setEditorContent('');
+            }}
           />
-
-          <div className="mt-4 flex items-center justify-end space-x-3">
-            <button
-              onClick={() => {
-                setShowEditor(false);
-                setEditingTemplate(null);
-                setNewTemplateName('');
-                setEditorContent('');
-              }}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                if (editingTemplate) {
-                  handleUpdateTemplate(editorContent);
-                } else {
-                  handleCreateTemplate(editorContent);
-                }
-              }}
-              disabled={!editingTemplate && !newTemplateName.trim()}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Save
-            </button>
-          </div>
         </div>
       )}
 
-      {/* Templates List */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {templates.map((template) => (
-          <div
-            key={template.id}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <h3 className="font-semibold text-gray-900">{template.name}</h3>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handleEditTemplate(template)}
-                  className="p-1 text-gray-500 hover:text-blue-600"
-                  title="Edit template"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteTemplate(template.id)}
-                  className="p-1 text-gray-500 hover:text-red-600"
-                  title="Delete template"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+      {/* Templates List - Only show when not editing */}
+      {!showEditor && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {templates.map((template) => (
+            <div
+              key={template.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleEditTemplate(template)}
+                    className="p-1 text-gray-500 hover:text-blue-600"
+                    title="Edit template"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="p-1 text-gray-500 hover:text-red-600"
+                    title="Delete template"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-600 mb-3">
+                <div 
+                  className="line-clamp-3"
+                  dangerouslySetInnerHTML={{ 
+                    __html: template.html_content.replace(/<[^>]*>/g, '').substring(0, 150) + '...' 
+                  }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>
+                  {template.is_default ? 'Default Template' : 'Custom Template'}
+                </span>
+                <span>
+                  {new Date(template.created_at).toLocaleDateString()}
+                </span>
               </div>
             </div>
-
-            <div className="text-sm text-gray-600 mb-3">
-              <div 
-                className="line-clamp-3"
-                dangerouslySetInnerHTML={{ 
-                  __html: template.html_content.replace(/<[^>]*>/g, '').substring(0, 150) + '...' 
-                }}
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>
-                {template.is_default ? 'Default Template' : 'Custom Template'}
-              </span>
-              <span>
-                {new Date(template.created_at).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
       {templates.length === 0 && !showEditor && (
