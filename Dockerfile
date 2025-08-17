@@ -27,8 +27,8 @@ FROM nginx:alpine
 # Copy built application from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom global nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Switch to nginx user
 USER nginx
