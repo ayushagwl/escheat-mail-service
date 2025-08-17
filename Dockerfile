@@ -37,8 +37,10 @@ RUN mkdir -p /var/cache/nginx/client_temp \
     /var/cache/nginx/scgi_temp \
     /var/cache/nginx/uwsgi_temp \
     /var/run/nginx && \
+    mkdir -p /var/run && \
     chown -R nginx:nginx /var/cache/nginx \
     /var/run/nginx \
+    /var/run \
     /usr/share/nginx/html \
     /etc/nginx/nginx.conf
 
