@@ -30,6 +30,18 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Copy custom global nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Create nginx cache directories and set permissions
+RUN mkdir -p /var/cache/nginx/client_temp \
+    /var/cache/nginx/fastcgi_temp \
+    /var/cache/nginx/proxy_temp \
+    /var/cache/nginx/scgi_temp \
+    /var/cache/nginx/uwsgi_temp \
+    /var/run/nginx && \
+    chown -R nginx:nginx /var/cache/nginx \
+    /var/run/nginx \
+    /usr/share/nginx/html \
+    /etc/nginx/nginx.conf
+
 # Switch to nginx user
 USER nginx
 
