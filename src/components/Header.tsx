@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Bell, 
@@ -12,6 +12,7 @@ import {
 const Header: React.FC = () => {
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   const getPageTitle = () => {
@@ -37,6 +38,7 @@ const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/login');
   };
 
   if (!user) return null;

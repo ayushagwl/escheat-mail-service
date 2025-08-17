@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  escheat-mail-service:
+    build:
+      context: .
+      args:
+        - REACT_APP_SUPABASE_URL=${REACT_APP_SUPABASE_URL}
+        - REACT_APP_SUPABASE_ANON_KEY=${REACT_APP_SUPABASE_ANON_KEY}
+        - REACT_APP_CKEDITOR_LICENSE_KEY=${REACT_APP_CKEDITOR_LICENSE_KEY}
+    container_name: escheat-mail-service
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./logs:/var/log/nginx
+      - ./ssl:/etc/nginx/ssl
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - escheat-network
+
+  # Optional: Add Redis for session management (future enhancement)
+  # redis:
+  #   image: redis:alpine
+  #   container_name: escheat-redis
+  #   restart: unless-stopped
+  #   networks:
+  #     - escheat-network
+
+networks:
+  escheat-network:
+    driver: bridge
+
+volumes:
+  logs:
+  ssl:

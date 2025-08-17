@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Home, 
@@ -8,15 +8,18 @@ import {
   FileText, 
   MessageCircle,
   Moon,
-  Sun
+  Sun,
+  LogOut
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/login');
   };
 
   const navigationItems = [
@@ -106,6 +109,15 @@ const Sidebar: React.FC = () => {
             <Sun className="w-4 h-4 text-gray-600" />
           </button>
         </div>
+        
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out</span>
+        </button>
       </div>
     </div>
   );
